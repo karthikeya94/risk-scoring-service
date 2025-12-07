@@ -1,0 +1,90 @@
+spring:
+  application:
+    name: risk-scoring-service
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/yourdatabase
+      database: sample_mflix
+      
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+kafka:
+  bootstrap-servers: localhost:9092
+  group-id: risk-scoring-group
+  topics:
+    transaction-validated: transaction-validated
+    risk-score-calculated: risk-score-calculated
+    risk-profile-updated: risk-profile-updated
+    risk-alert-high-score: risk-alert-high-score
+
+server:
+  port: ${PORT:0}
+
+eureka:
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instace_id:${random.value}}
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+
+logging:
+  level:
+    com.risk.scoring: INFO
+
+risk:
+  scoring:
+    weights:
+      transaction: 0.30
+      behavior: 0.25
+      velocity: 0.20
+      geographic: 0.15
+      merchant: 0.10
+    transaction:
+      amount-multiplier: 3
+      daily-limit-threshold: 0.8
+    behavior:
+      new-customer-days: 30
+      failed-transactions-threshold: 3
+      dormant-days: 90
+    velocity:
+      one-hour-threshold: 20
+      one-day-threshold: 100
+      one-day-medium-threshold: 50
+    geographic:
+      impossible-travel-distance: 1000
+      impossible-travel-time: 1
+      high-risk-distance: 500
+      high-risk-time: 2
+    merchant:
+      high-risk-categories:
+        - Drugs
+        - Weapons
+        - Gambling
+        - Dark_Web
+      medium-risk-categories:
+        - Cash_Advance
+        - Wire_Transfer
+        - Crypto
+      chargeback-rate-threshold: 0.05
+      new-merchant-days: 30
+    profile:
+      debounce-threshold: 5
+      significant-change-threshold: 10
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  packages-to-scan: com.risk.scoring

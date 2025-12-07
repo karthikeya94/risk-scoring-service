@@ -1,0 +1,9 @@
+package com.risk.scoring.model.enums;
+
+public enum RuleType {
+    TRANSACTION_AMOUNT_CHECK,
+    VELOCITY_CHECK,
+    GEOGRAPHIC_DISTANCE_CHECK,
+    MERCHANT_CATEGORY_CHECK,
+    CUSTOMER_BEHAVIOR_CHECK
+}
