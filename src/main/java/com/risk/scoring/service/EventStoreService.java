@@ -1,7 +1,7 @@
 package com.risk.scoring.service;
 
-import com.risk.scoring.model.EventStoreEntry;
-import com.risk.scoring.model.RiskAssessment;
+import com.riskplatform.common.entity.EventStoreEntry;
+import com.riskplatform.common.entity.RiskAssessment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
@@ -14,13 +14,13 @@ public interface EventStoreService {
     List<EventStoreEntry> getEventsByCustomerId(String customerId);
 
     Page<EventStoreEntry> getEventsByCustomerIdAndDateRange(String customerId,
-                                                            LocalDateTime startDate,
-                                                            LocalDateTime endDate,
-                                                            Pageable pageable);
+            LocalDateTime startDate,
+            LocalDateTime endDate,
+            Pageable pageable);
 
     List<EventStoreEntry> getEventsByEventTypeAndDateRange(String eventType,
-                                                           LocalDateTime startDate,
-                                                           LocalDateTime endDate);
+            LocalDateTime startDate,
+            LocalDateTime endDate);
 
     List<EventStoreEntry> getRecentEventsByCustomerId(String customerId, int limit);
 

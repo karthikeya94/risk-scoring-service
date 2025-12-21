@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
 import java.time.Instant;
+import com.riskplatform.common.model.Location;
 
 @Data
 @NoArgsConstructor

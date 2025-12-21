@@ -1,6 +1,6 @@
 package com.risk.scoring.model.dto;
 
-import com.risk.scoring.model.RiskAssessment;
+import com.riskplatform.common.entity.RiskAssessment;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;

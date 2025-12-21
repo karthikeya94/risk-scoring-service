@@ -1,7 +1,8 @@
 package com.risk.scoring.model;
 
-import com.risk.scoring.model.enums.RiskLevel;
-import com.risk.scoring.model.enums.Decision;
+import com.riskplatform.common.enums.RiskLevel;
+import com.riskplatform.common.enums.Decision;
+import com.riskplatform.common.entity.DecisionDetails;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;

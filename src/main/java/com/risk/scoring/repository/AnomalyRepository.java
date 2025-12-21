@@ -1,9 +1,8 @@
 package com.risk.scoring.repository;
 
-import com.risk.scoring.model.Anomaly;
-import com.risk.scoring.model.enums.AnomalyType;
-import com.risk.scoring.model.enums.Severity;
-import com.risk.scoring.model.enums.AnomalyStatus;
+import com.riskplatform.common.entity.Anomaly;
+import com.riskplatform.common.enums.AnomalyType;
+import com.riskplatform.common.enums.Severity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import java.time.Instant;
@@ -17,5 +16,5 @@ public interface AnomalyRepository extends MongoRepository<Anomaly, String> {
 
     List<Anomaly> findByDetectedAtAfter(Instant timestamp);
 
-    List<Anomaly> findByStatusAndSeverity(AnomalyStatus status, Severity severity);
+    List<Anomaly> findBySeverity(Severity severity);
 }

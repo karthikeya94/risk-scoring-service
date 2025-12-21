@@ -20,6 +20,6 @@ public class CustomerProfileData {
     private AccountStatus accountStatus;
     private boolean fraudHistory;
     private int failedTransactionsLast7Days;
-    private Location lastVerifiedLocation;
+    private com.riskplatform.common.model.Location lastVerifiedLocation;
     private Instant lastTransactionTime;
 }

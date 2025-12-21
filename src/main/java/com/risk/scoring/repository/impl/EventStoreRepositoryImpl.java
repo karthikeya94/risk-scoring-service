@@ -1,6 +1,6 @@
 package com.risk.scoring.repository.impl;
 
-import com.risk.scoring.model.EventStoreEntry;
+import com.riskplatform.common.entity.EventStoreEntry;
 import com.risk.scoring.repository.EventStoreRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,7 +20,8 @@ public class EventStoreRepositoryImpl {
     @Autowired
     private MongoTemplate mongoTemplate;
 
-    public Page<EventStoreEntry> findByCustomerIdAndDateRange(String customerId, LocalDateTime startDate, LocalDateTime endDate, Pageable pageable) {
+    public Page<EventStoreEntry> findByCustomerIdAndDateRange(String customerId, LocalDateTime startDate,
+            LocalDateTime endDate, Pageable pageable) {
         Query query = new Query();
         query.addCriteria(Criteria.where("aggregateId").is(customerId)
                 .and("timestamp").gte(startDate).lte(endDate));
@@ -30,7 +31,8 @@ public class EventStoreRepositoryImpl {
         return new PageImpl<>(events, pageable, events.size());
     }
 
-    public List<EventStoreEntry> findByEventTypeAndDateRange(String eventType, LocalDateTime startDate, LocalDateTime endDate) {
+    public List<EventStoreEntry> findByEventTypeAndDateRange(String eventType, LocalDateTime startDate,
+            LocalDateTime endDate) {
         Query query = new Query();
         query.addCriteria(Criteria.where("eventType").is(eventType)
                 .and("timestamp").gte(startDate).lte(endDate));
@@ -42,7 +44,8 @@ public class EventStoreRepositoryImpl {
         Query query = new Query();
         query.addCriteria(Criteria.where("aggregateId").is(customerId));
         query.limit(limit);
-        query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC, "timestamp"));
+        query.with(org.springframework.data.domain.Sort.by(org.springframework.data.domain.Sort.Direction.DESC,
+                "timestamp"));
 
         return mongoTemplate.find(query, EventStoreEntry.class);
     }

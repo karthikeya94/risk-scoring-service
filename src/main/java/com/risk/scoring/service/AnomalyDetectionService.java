@@ -1,7 +1,7 @@
 package com.risk.scoring.service;
 
-import com.risk.scoring.model.Anomaly;
-import com.risk.scoring.model.RiskAssessment;
+import com.riskplatform.common.entity.Anomaly;
+import com.riskplatform.common.entity.RiskAssessment;
 import com.risk.scoring.model.dto.AnomaliesResponse;
 
 import java.util.List;

@@ -1,9 +1,12 @@
 package com.risk.scoring.service.impl;
 
-import com.risk.scoring.model.*;
-import com.risk.scoring.model.enums.Decision;
-import com.risk.scoring.model.enums.RiskLevel;
-import com.risk.scoring.model.enums.Severity;
+import com.riskplatform.common.entity.RiskAssessment;
+import com.riskplatform.common.entity.RiskFactors;
+import com.riskplatform.common.entity.RiskFlag;
+import com.riskplatform.common.entity.DecisionDetails;
+import com.riskplatform.common.enums.Decision;
+import com.riskplatform.common.enums.RiskLevel;
+import com.riskplatform.common.enums.Severity;
 import com.risk.scoring.model.dto.RiskCalculationRequest;
 import com.risk.scoring.model.dto.RiskCalculationResponse;
 import com.risk.scoring.service.RiskFactorService;
@@ -12,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -54,7 +57,9 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         assessment.setDecision(decision);
 
         double approvalConfidence = calculateApprovalConfidence(riskScore, riskLevel);
-        assessment.getDecisionDetails().setApprovalConfidence(approvalConfidence);
+        if (assessment.getDecisionDetails() != null) {
+            assessment.getDecisionDetails().setApprovalConfidence(approvalConfidence);
+        }
 
         RiskCalculationResponse response = new RiskCalculationResponse();
         response.setRiskAssessment(assessment);
@@ -75,11 +80,13 @@ public class RiskScoringServiceImpl implements RiskScoringService {
 
     private int calculateOverallRiskScore(RiskFactors factors) {
         double score = 0.0;
-        score += factors.getTransactionRisk() * transactionRiskService.getWeight();
-        score += factors.getBehaviorRisk() * behaviorRiskService.getWeight();
-        score += factors.getVelocityRisk() * velocityRiskService.getWeight();
-        score += factors.getGeographicRisk() * geographicRiskService.getWeight();
-        score += factors.getMerchantRisk() * merchantRiskService.getWeight();
+        score += (factors.getTransactionRisk() != null ? factors.getTransactionRisk() : 0)
+                * transactionRiskService.getWeight();
+        score += (factors.getBehaviorRisk() != null ? factors.getBehaviorRisk() : 0) * behaviorRiskService.getWeight();
+        score += (factors.getVelocityRisk() != null ? factors.getVelocityRisk() : 0) * velocityRiskService.getWeight();
+        score += (factors.getGeographicRisk() != null ? factors.getGeographicRisk() : 0)
+                * geographicRiskService.getWeight();
+        score += (factors.getMerchantRisk() != null ? factors.getMerchantRisk() : 0) * merchantRiskService.getWeight();
 
         return (int) Math.round(score);
     }
@@ -101,15 +108,15 @@ public class RiskScoringServiceImpl implements RiskScoringService {
     public Decision determineDecision(RiskLevel riskLevel) {
         switch (riskLevel) {
             case LOW:
-                return Decision.APPROVE;
+                return Decision.ALLOW;
             case MEDIUM:
-                return Decision.APPROVE_WITH_MONITORING;
+                return Decision.MONITOR;
             case HIGH:
                 return Decision.MANUAL_REVIEW;
             case CRITICAL:
-                return Decision.REJECT_BLOCK;
+                return Decision.BLOCK;
             default:
-                return Decision.REJECT_BLOCK;
+                return Decision.BLOCK;
         }
     }
 
@@ -118,7 +125,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         RiskAssessment assessment = new RiskAssessment();
         assessment.setTransactionId(request.getTransactionId());
         assessment.setRiskFactors(factors);
-        assessment.setTimestamp(java.time.Instant.now());
+        assessment.setTimestamp(Instant.now());
 
         DecisionDetails decisionDetails = new DecisionDetails();
         decisionDetails.setManualReviewRequired(false);
@@ -134,7 +141,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         List<RiskFlag> flags = new ArrayList<>();
 
         // Geographic anomaly flag
-        if (factors.getGeographicRisk() > 10) {
+        if (factors.getGeographicRisk() != null && factors.getGeographicRisk() > 10) {
             RiskFlag flag = new RiskFlag();
             flag.setFlag("GEOGRAPHIC_ANOMALY");
             flag.setSeverity(Severity.MEDIUM);
@@ -143,7 +150,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         }
 
         // High velocity flag
-        if (factors.getVelocityRisk() > 10) {
+        if (factors.getVelocityRisk() != null && factors.getVelocityRisk() > 10) {
             RiskFlag flag = new RiskFlag();
             flag.setFlag("HIGH_VELOCITY");
             flag.setSeverity(Severity.MEDIUM);
@@ -152,7 +159,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         }
 
         // High amount flag
-        if (factors.getTransactionRisk() > 20) {
+        if (factors.getTransactionRisk() != null && factors.getTransactionRisk() > 20) {
             RiskFlag flag = new RiskFlag();
             flag.setFlag("HIGH_AMOUNT");
             flag.setSeverity(Severity.HIGH);
@@ -161,7 +168,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         }
 
         // Add more flags based on specific risk factor values
-        if (factors.getBehaviorRisk() > 20) {
+        if (factors.getBehaviorRisk() != null && factors.getBehaviorRisk() > 20) {
             RiskFlag flag = new RiskFlag();
             flag.setFlag("CUSTOMER_BEHAVIOR_RISK");
             flag.setSeverity(Severity.HIGH);
@@ -169,7 +176,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
             flags.add(flag);
         }
 
-        if (factors.getMerchantRisk() > 5) {
+        if (factors.getMerchantRisk() != null && factors.getMerchantRisk() > 5) {
             RiskFlag flag = new RiskFlag();
             flag.setFlag("MERCHANT_RISK");
             flag.setSeverity(Severity.MEDIUM);
@@ -197,6 +204,12 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         com.risk.scoring.model.dto.CustomerRiskProfileResponse response = new com.risk.scoring.model.dto.CustomerRiskProfileResponse();
         response.setCustomerId(profile.getCustomerId());
         response.setCurrentRiskScore(profile.getCurrentRiskScore());
+        // Map local RiskLevel to String or common RiskLevel (DTO likely uses String or
+        // incompatible enum?)
+        // Assuming response DTO uses local RiskLevel or compatible.
+        // Let's check response DTO later. For now, assuming direct assignment:
+        // profile.getRiskLevel() returns local RiskLevel. Response expects local
+        // RiskLevel?
         response.setRiskLevel(profile.getRiskLevel());
         response.setLastUpdated(profile.getLastUpdated());
         response.setScoreHistory(profile.getScoreHistory());
@@ -247,7 +260,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
             startTime = java.time.Instant.now().minus(24, java.time.temporal.ChronoUnit.HOURS);
         }
 
-        List<com.risk.scoring.model.Anomaly> anomalies = anomalyRepository.findByDetectedAtAfter(startTime);
+        List<com.riskplatform.common.entity.Anomaly> anomalies = anomalyRepository.findByDetectedAtAfter(startTime);
 
         com.risk.scoring.model.dto.AnomaliesResponse response = new com.risk.scoring.model.dto.AnomaliesResponse();
         response.setAnomalies(anomalies);

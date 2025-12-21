@@ -8,10 +8,10 @@ import com.risk.scoring.service.CustomerRiskProfileService;
 import com.risk.scoring.service.RiskScoringService;
 import com.risk.scoring.service.EventStoreService;
 import com.risk.scoring.service.AnomalyDetectionService;
-import com.risk.scoring.model.RiskAssessment;
+import com.riskplatform.common.entity.RiskAssessment;
 import com.risk.scoring.model.CustomerRiskProfile;
-import com.risk.scoring.model.Anomaly;
-import com.risk.scoring.model.EventStoreEntry;
+import com.riskplatform.common.entity.Anomaly;
+import com.riskplatform.common.entity.EventStoreEntry;
 import com.risk.scoring.service.impl.CustomerRiskProfileServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,32 +25,31 @@ import java.util.Optional;
 @Service
 @Slf4j
 public class KafkaConsumerService {
-    
+
     @Autowired
     private RiskScoringService riskScoringService;
-    
+
     @Autowired
     private CustomerRiskProfileService customerRiskProfileService;
-    
+
     @Autowired
     private EventStoreService eventStoreService;
-    
+
     @Autowired
     private AnomalyDetectionService anomalyDetectionService;
-    
+
     @Autowired
     private KafkaProducerService kafkaProducerService;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    @KafkaListener(topics = "${kafka.topics.transaction-validated}", 
-                   groupId = "${kafka.group-id}")
+    @KafkaListener(topics = "${kafka.topics.transaction-validated}", groupId = "${kafka.group-id}")
     public void consumeTransactionValidatedEvent(String message) {
         try {
-            log.info("RISK SCORING EVENT RECEIVED: {}",message);
+            log.info("RISK SCORING EVENT RECEIVED: {}", message);
             TransactionValidatedEvent event = objectMapper.readValue(message, TransactionValidatedEvent.class);
-            log.info("RISK SCORING EVENT RECEIVED: {}",event);
+            log.info("RISK SCORING EVENT RECEIVED: {}", event);
             RiskCalculationRequest request = createRiskCalculationRequest(event);
 
             RiskAssessment assessment = riskScoringService.calculateRiskScore(request).getRiskAssessment();
@@ -58,21 +57,23 @@ public class KafkaConsumerService {
             String customerId = event.getCustomerId();
             Optional<CustomerRiskProfile> profileOpt = customerRiskProfileService.getCustomerRiskProfile(customerId);
             CustomerRiskProfile profile;
-            
+
             if (profileOpt.isPresent()) {
                 profile = profileOpt.get();
                 // Use the improved update method from CustomerRiskProfileServiceImpl
                 profile = ((CustomerRiskProfileServiceImpl) customerRiskProfileService)
-                    .updateCustomerRiskProfileFromAssessment(profile, assessment);
+                        .updateCustomerRiskProfileFromAssessment(profile, assessment);
             } else {
-                // Create new profile using the improved method from CustomerRiskProfileServiceImpl
+                // Create new profile using the improved method from
+                // CustomerRiskProfileServiceImpl
                 CustomerProfileData customerProfileData = request.getCustomerProfile();
                 profile = ((CustomerRiskProfileServiceImpl) customerRiskProfileService)
-                    .createCustomerRiskProfileFromAssessment(assessment, customerProfileData);
+                        .createCustomerRiskProfileFromAssessment(assessment, customerProfileData);
                 profile.setCustomerId(customerId);
             }
 
-            // Check if we should update the profile using the service's significant change method
+            // Check if we should update the profile using the service's significant change
+            // method
             boolean shouldUpdate = false;
             if (profileOpt.isPresent()) {
                 shouldUpdate = customerRiskProfileService.isSignificantChange(profileOpt.get(), profile);
@@ -93,7 +94,7 @@ public class KafkaConsumerService {
             eventData.setPreviousScore(profileOpt.map(CustomerRiskProfile::getCurrentRiskScore).orElse(0));
             eventData.setNewScore(assessment.getRiskScore());
             eventData.setRiskLevel(assessment.getRiskLevel());
-            
+
             // Create factors map
             java.util.Map<String, Integer> factors = new java.util.HashMap<>();
             factors.put("transaction", assessment.getRiskFactors().getTransactionRisk());
@@ -102,7 +103,7 @@ public class KafkaConsumerService {
             factors.put("geographic", assessment.getRiskFactors().getGeographicRisk());
             factors.put("merchant", assessment.getRiskFactors().getMerchantRisk());
             eventData.setFactors(factors);
-            
+
             eventData.setDecision(assessment.getDecision());
             eventData.setDecisionDetails(assessment.getDecisionDetails());
 
@@ -112,8 +113,8 @@ public class KafkaConsumerService {
             if (!anomalies.isEmpty()) {
                 anomalyDetectionService.saveAnomalies(anomalies);
 
-                if (assessment.getRiskLevel() == com.risk.scoring.model.enums.RiskLevel.HIGH || 
-                    assessment.getRiskLevel() == com.risk.scoring.model.enums.RiskLevel.CRITICAL) {
+                if (assessment.getRiskLevel() == com.riskplatform.common.enums.RiskLevel.HIGH ||
+                        assessment.getRiskLevel() == com.riskplatform.common.enums.RiskLevel.CRITICAL) {
                     kafkaProducerService.sendHighRiskAlert(assessment);
                 }
             }
@@ -125,7 +126,7 @@ public class KafkaConsumerService {
             e.printStackTrace();
         }
     }
-    
+
     private RiskCalculationRequest createRiskCalculationRequest(TransactionValidatedEvent event) {
         RiskCalculationRequest request = new RiskCalculationRequest();
 
@@ -133,6 +134,9 @@ public class KafkaConsumerService {
         request.setCustomerId(event.getCustomerId());
         request.setAmount(event.getAmount());
         request.setMerchant(event.getMerchant());
+        // event.getLocation() returns com.risk.scoring.model.Location, but request
+        // expects com.riskplatform.common.model.Location
+        // Assuming TransactionValidatedEvent will be updated to use common Location
         request.setLocation(event.getLocation());
         request.setTimestamp(event.getTimestamp());
 
@@ -151,17 +155,17 @@ public class KafkaConsumerService {
             velocityData = createMockVelocityData(event);
         }
         request.setVelocityData(velocityData);
-        
+
         return request;
     }
-    
+
     private CustomerProfileData createMockCustomerProfile(TransactionValidatedEvent event) {
         CustomerProfileData customerProfile = new CustomerProfileData();
         customerProfile.setRegistrationDate(event.getTimestamp().minusSeconds(86400 * 365)); // 1 year ago
         customerProfile.setKycStatus(com.risk.scoring.model.enums.KycStatus.VERIFIED);
         customerProfile.setAllowedCountries(java.util.Arrays.asList("US", "CA", "GB", "AU", "IN"));
-        customerProfile.setDailyLimit(new Double("5000.0"));
-        customerProfile.setAvgTransactionAmount(new Double("1000.0"));
+        customerProfile.setDailyLimit(5000.0);
+        customerProfile.setAvgTransactionAmount(1000.0);
         customerProfile.setAccountStatus(com.risk.scoring.model.enums.AccountStatus.ACTIVE);
         customerProfile.setFraudHistory(false);
         customerProfile.setFailedTransactionsLast7Days(0);
@@ -169,7 +173,7 @@ public class KafkaConsumerService {
         customerProfile.setLastTransactionTime(event.getTimestamp().minusSeconds(3600)); // 1 hour ago
         return customerProfile;
     }
-    
+
     private VelocityData createMockVelocityData(TransactionValidatedEvent event) {
         VelocityData velocityData = new VelocityData();
         velocityData.setTransactionsInLastHour(5);

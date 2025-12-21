@@ -1,6 +1,6 @@
 package com.risk.scoring.messaging;
 
-import com.risk.scoring.model.Location;
+import com.riskplatform.common.model.Location;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

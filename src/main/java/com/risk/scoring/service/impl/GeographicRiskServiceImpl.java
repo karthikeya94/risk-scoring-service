@@ -1,6 +1,6 @@
 package com.risk.scoring.service.impl;
 
-import com.risk.scoring.model.Location;
+import com.riskplatform.common.model.Location;
 import com.risk.scoring.model.dto.RiskCalculationRequest;
 import com.risk.scoring.service.RiskFactorService;
 import org.springframework.stereotype.Service;
@@ -58,22 +58,25 @@ public class GeographicRiskServiceImpl implements RiskFactorService {
     }
 
     /**
-     * Calculate the great circle distance between two points on the earth using the Haversine formula
+     * Calculate the great circle distance between two points on the earth using the
+     * Haversine formula
+     * 
      * @param loc1 First location
      * @param loc2 Second location
      * @return Distance in kilometers
      */
     private double calculateHaversineDistance(Location loc1, Location loc2) {
         // For simplicity, we're using a basic approximation
-        // In a real implementation, you would use actual coordinates (latitude/longitude)
+        // In a real implementation, you would use actual coordinates
+        // (latitude/longitude)
         // and calculate the precise Haversine distance
-        
+
         // If same country, assume small distance
         if (loc1.getCountry() != null && loc2.getCountry() != null &&
-            loc1.getCountry().equals(loc2.getCountry())) {
+                loc1.getCountry().equals(loc2.getCountry())) {
             return 0;
         }
-        
+
         // Simple approximation - in a real system, you'd use actual coordinates
         // This is just a placeholder for demonstration
         return 1000; // Assume 1000km distance for different countries

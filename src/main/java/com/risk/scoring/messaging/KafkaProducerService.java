@@ -2,7 +2,7 @@ package com.risk.scoring.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.risk.scoring.model.CustomerRiskProfile;
-import com.risk.scoring.model.RiskAssessment;
+import com.riskplatform.common.entity.RiskAssessment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,19 +12,19 @@ import org.springframework.stereotype.Service;
 @Service
 @Slf4j
 public class KafkaProducerService {
-    
+
     @Autowired
     private KafkaTemplate<String, String> kafkaTemplate;
-    
+
     @Autowired
     private ObjectMapper objectMapper;
-    
+
     @Value("${kafka.topics.risk-score-calculated}")
     private String riskScoreCalculatedTopic;
-    
+
     @Value("${kafka.topics.risk-profile-updated}")
     private String riskProfileUpdatedTopic;
-    
+
     @Value("${kafka.topics.risk-alert-high-score}")
     private String riskAlertHighScoreTopic;
 
