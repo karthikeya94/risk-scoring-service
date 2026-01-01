@@ -2,7 +2,6 @@ package com.risk.scoring.model.dto;
 
 import com.risk.scoring.model.CustomerProfileData;
 import com.riskplatform.common.model.Location;
-import com.risk.scoring.model.TransactionData;
 import com.risk.scoring.model.VelocityData;
 import lombok.Data;
 import lombok.NoArgsConstructor;

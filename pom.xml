@@ -83,6 +83,12 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
+
+        <dependency>
+            <groupId>com.riskplatform</groupId>
+            <artifactId>common-models</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
 	</dependencies>
 
 	<dependencyManagement>

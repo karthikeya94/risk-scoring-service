@@ -198,32 +198,24 @@ public class RiskScoringServiceImpl implements RiskScoringService {
 
     @Override
     public com.risk.scoring.model.dto.CustomerRiskProfileResponse getCustomerRiskProfile(String customerId) {
-        com.risk.scoring.model.CustomerRiskProfile profile = customerRiskProfileRepository.findByCustomerId(customerId)
+        com.riskplatform.common.entity.CustomerRiskProfile profile = customerRiskProfileRepository
+                .findByCustomerId(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer risk profile not found"));
 
         com.risk.scoring.model.dto.CustomerRiskProfileResponse response = new com.risk.scoring.model.dto.CustomerRiskProfileResponse();
         response.setCustomerId(profile.getCustomerId());
         response.setCurrentRiskScore(profile.getCurrentRiskScore());
-        // Map local RiskLevel to String or common RiskLevel (DTO likely uses String or
-        // incompatible enum?)
-        // Assuming response DTO uses local RiskLevel or compatible.
-        // Let's check response DTO later. For now, assuming direct assignment:
-        // profile.getRiskLevel() returns local RiskLevel. Response expects local
-        // RiskLevel?
         response.setRiskLevel(profile.getRiskLevel());
         response.setLastUpdated(profile.getLastUpdated());
         response.setScoreHistory(profile.getScoreHistory());
         response.setMonthlyStats(profile.getMonthlyStats());
 
-        if (profile.getCustomerProfile() != null) {
-            com.risk.scoring.model.dto.CustomerProfileSummary summary = new com.risk.scoring.model.dto.CustomerProfileSummary();
-            summary.setCustomerSegment("STANDARD");
-            summary.setKycStatus(profile.getCustomerProfile().getKycStatus());
-            summary.setFraudHistory(profile.getCustomerProfile().isFraudHistory());
-            summary.setDormant(profile.getCustomerProfile()
-                    .getAccountStatus() == com.risk.scoring.model.enums.AccountStatus.DORMANT);
-            response.setRiskProfile(summary);
-        }
+        // Common entity doesn't store profile summary
+        com.risk.scoring.model.dto.CustomerProfileSummary summary = new com.risk.scoring.model.dto.CustomerProfileSummary();
+        summary.setCustomerSegment("STANDARD");
+        summary.setFraudHistory(Boolean.TRUE
+                .equals(profile.getRiskFactorStatus() != null && profile.getRiskFactorStatus().getFraudHistory()));
+        response.setRiskProfile(summary);
 
         return response;
     }
@@ -231,23 +223,28 @@ public class RiskScoringServiceImpl implements RiskScoringService {
     @Override
     public com.risk.scoring.model.dto.RiskRuleResponse createOrUpdateRule(
             com.risk.scoring.model.dto.RiskRuleRequest request) {
-        com.risk.scoring.model.RiskRule rule = new com.risk.scoring.model.RiskRule();
+        com.riskplatform.common.entity.RiskRule rule = new com.riskplatform.common.entity.RiskRule();
         if (request.getRuleId() != null) {
-            rule = riskRuleRepository.findById(request.getRuleId()).orElse(new com.risk.scoring.model.RiskRule());
+            rule = riskRuleRepository.findById(request.getRuleId())
+                    .orElse(new com.riskplatform.common.entity.RiskRule());
         }
 
         rule.setRuleName(request.getRuleName());
-        rule.setRuleType(request.getRuleType());
+        try {
+            rule.setRuleType(com.riskplatform.common.enums.RuleType.valueOf(request.getRuleType()));
+        } catch (Exception e) {
+            rule.setRuleType(com.riskplatform.common.enums.RuleType.VELOCITY_CHECK);
+        }
         rule.setParameters(request.getParameters());
         rule.setEnabled(request.isEnabled());
         rule.setEffectiveDate(request.getEffectiveDate());
 
-        com.risk.scoring.model.RiskRule savedRule = riskRuleRepository.save(rule);
+        com.riskplatform.common.entity.RiskRule savedRule = riskRuleRepository.save(rule);
 
         com.risk.scoring.model.dto.RiskRuleResponse response = new com.risk.scoring.model.dto.RiskRuleResponse();
-        response.setRuleId(savedRule.getId());
-        response.setStatus(savedRule.isEnabled() ? "ACTIVE" : "INACTIVE");
-        response.setVersion(savedRule.getVersion());
+        response.setRuleId(savedRule.getRuleId());
+        response.setStatus(Boolean.TRUE.equals(savedRule.getEnabled()) ? "ACTIVE" : "INACTIVE");
+        response.setVersion(savedRule.getVersion() != null ? savedRule.getVersion().intValue() : 1);
         response.setMessage("Risk scoring rule updated successfully");
 
         return response;

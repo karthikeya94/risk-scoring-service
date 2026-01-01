@@ -1,7 +1,7 @@
 package com.risk.scoring.messaging;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.risk.scoring.model.CustomerRiskProfile;
+import com.riskplatform.common.entity.CustomerRiskProfile;
 import com.riskplatform.common.entity.RiskAssessment;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,6 +1,6 @@
 package com.risk.scoring.repository;
 
-import com.risk.scoring.model.RiskRule;
+import com.riskplatform.common.entity.RiskRule;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

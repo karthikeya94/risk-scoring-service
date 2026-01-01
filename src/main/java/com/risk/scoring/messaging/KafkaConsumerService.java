@@ -9,10 +9,10 @@ import com.risk.scoring.service.RiskScoringService;
 import com.risk.scoring.service.EventStoreService;
 import com.risk.scoring.service.AnomalyDetectionService;
 import com.riskplatform.common.entity.RiskAssessment;
-import com.risk.scoring.model.CustomerRiskProfile;
+import com.riskplatform.common.entity.CustomerRiskProfile;
 import com.riskplatform.common.entity.Anomaly;
 import com.riskplatform.common.entity.EventStoreEntry;
-import com.risk.scoring.service.impl.CustomerRiskProfileServiceImpl;
+import com.riskplatform.common.event.TransactionEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -53,22 +53,20 @@ public class KafkaConsumerService {
             RiskCalculationRequest request = createRiskCalculationRequest(event);
 
             RiskAssessment assessment = riskScoringService.calculateRiskScore(request).getRiskAssessment();
-
+            assessment.setCustomerId(request.getCustomerId());
             String customerId = event.getCustomerId();
             Optional<CustomerRiskProfile> profileOpt = customerRiskProfileService.getCustomerRiskProfile(customerId);
             CustomerRiskProfile profile;
 
             if (profileOpt.isPresent()) {
                 profile = profileOpt.get();
-                // Use the improved update method from CustomerRiskProfileServiceImpl
-                profile = ((CustomerRiskProfileServiceImpl) customerRiskProfileService)
-                        .updateCustomerRiskProfileFromAssessment(profile, assessment);
+                // Use the interface method
+                profile = customerRiskProfileService.updateCustomerRiskProfileFromAssessment(profile, assessment);
             } else {
-                // Create new profile using the improved method from
-                // CustomerRiskProfileServiceImpl
+                // Create new profile using the interface method
                 CustomerProfileData customerProfileData = request.getCustomerProfile();
-                profile = ((CustomerRiskProfileServiceImpl) customerRiskProfileService)
-                        .createCustomerRiskProfileFromAssessment(assessment, customerProfileData);
+                profile = customerRiskProfileService.createCustomerRiskProfileFromAssessment(assessment,
+                        customerProfileData);
                 profile.setCustomerId(customerId);
             }
 

@@ -1,7 +1,6 @@
 package com.risk.scoring.service.impl;
 
 import com.risk.scoring.model.CustomerProfileData;
-import com.risk.scoring.model.TransactionData;
 import com.risk.scoring.model.dto.RiskCalculationRequest;
 import com.risk.scoring.service.RiskFactorService;
 import org.springframework.stereotype.Service;
@@ -49,7 +48,8 @@ public class TransactionRiskServiceImpl implements RiskFactorService {
         }
 
         // Add bonus points for high-risk channels
-        // For now, we'll check if the request has a channel field that indicates high risk
+        // For now, we'll check if the request has a channel field that indicates high
+        // risk
         // In a real implementation, this would come from the transaction data
         if (isHighRiskChannel(request)) {
             score += 8;
@@ -59,13 +59,15 @@ public class TransactionRiskServiceImpl implements RiskFactorService {
     }
 
     private boolean isHighRiskChannel(RiskCalculationRequest request) {
-        // Placeholder implementation - in a real system this would check the actual channel
-        // For example, mobile transactions from new locations might be considered high risk
+        // Placeholder implementation - in a real system this would check the actual
+        // channel
+        // For example, mobile transactions from new locations might be considered high
+        // risk
         return request.getLocation() != null &&
-               request.getCustomerProfile() != null &&
-               request.getCustomerProfile().getLastVerifiedLocation() != null &&
-               !request.getLocation().getCountry().equals(
-                   request.getCustomerProfile().getLastVerifiedLocation().getCountry());
+                request.getCustomerProfile() != null &&
+                request.getCustomerProfile().getLastVerifiedLocation() != null &&
+                !request.getLocation().getCountry().equals(
+                        request.getCustomerProfile().getLastVerifiedLocation().getCountry());
     }
 
     @Override

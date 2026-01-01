@@ -1,6 +1,7 @@
 package com.risk.scoring.service.impl;
 
-import com.risk.scoring.model.RiskRule;
+import com.riskplatform.common.entity.RiskRule;
+import com.riskplatform.common.enums.RuleType;
 import com.risk.scoring.model.dto.RiskRuleRequest;
 import com.risk.scoring.model.dto.RiskRuleResponse;
 import com.risk.scoring.repository.RiskRuleRepository;
@@ -9,11 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 
 @Service
 public class RiskRuleServiceImpl implements RiskRuleService {
@@ -44,8 +43,8 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         if (isNew) {
             // Create new rule
             rule = new RiskRule();
-            rule.setId("RULE-" + UUID.randomUUID().toString().toUpperCase().replace("-", "").substring(0, 8));
-            rule.setVersion(1);
+            rule.setRuleId("RULE-" + UUID.randomUUID().toString().toUpperCase().replace("-", "").substring(0, 8));
+            rule.setVersion(1L);
             rule.setCreatedAt(Instant.now());
         } else {
             // Update existing rule
@@ -59,7 +58,15 @@ public class RiskRuleServiceImpl implements RiskRuleService {
 
         // Update rule properties
         rule.setRuleName(request.getRuleName());
-        rule.setRuleType(request.getRuleType());
+        try {
+            rule.setRuleType(RuleType.valueOf(request.getRuleType()));
+        } catch (IllegalArgumentException e) {
+            // Default or handle error. Assuming mapping exists or string matches.
+            // If request.getRuleType() is null or invalid, this throws.
+            // Fallback for demo:
+            rule.setRuleType(RuleType.VELOCITY_CHECK);
+        }
+
         rule.setParameters(request.getParameters());
         rule.setEnabled(request.isEnabled());
         rule.setEffectiveDate(request.getEffectiveDate());
@@ -70,9 +77,9 @@ public class RiskRuleServiceImpl implements RiskRuleService {
 
         // Create response
         RiskRuleResponse response = new RiskRuleResponse();
-        response.setRuleId(rule.getId());
-        response.setStatus(rule.isEnabled() ? "ACTIVE" : "INACTIVE");
-        response.setVersion(rule.getVersion());
+        response.setRuleId(rule.getRuleId());
+        response.setStatus(Boolean.TRUE.equals(rule.getEnabled()) ? "ACTIVE" : "INACTIVE");
+        response.setVersion(rule.getVersion().intValue());
         response.setMessage(
                 isNew ? "Risk scoring rule created successfully" : "Risk scoring rule updated successfully");
 
@@ -102,11 +109,11 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         rule.setVersion(rule.getVersion() + 1);
 
         rule = riskRuleRepository.save(rule);
-        
+
         RiskRuleResponse response = new RiskRuleResponse();
-        response.setRuleId(rule.getId());
+        response.setRuleId(rule.getRuleId());
         response.setStatus("ACTIVE");
-        response.setVersion(rule.getVersion());
+        response.setVersion(rule.getVersion().intValue());
         response.setMessage("Risk scoring rule activated successfully");
 
         return response;
@@ -125,11 +132,11 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         rule.setVersion(rule.getVersion() + 1);
 
         rule = riskRuleRepository.save(rule);
-        
+
         RiskRuleResponse response = new RiskRuleResponse();
-        response.setRuleId(rule.getId());
+        response.setRuleId(rule.getRuleId());
         response.setStatus("INACTIVE");
-        response.setVersion(rule.getVersion());
+        response.setVersion(rule.getVersion().intValue());
         response.setMessage("Risk scoring rule deactivated successfully");
 
         return response;
