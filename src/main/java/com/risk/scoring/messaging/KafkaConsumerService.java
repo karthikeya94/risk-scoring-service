@@ -12,7 +12,7 @@ import com.riskplatform.common.entity.RiskAssessment;
 import com.riskplatform.common.entity.CustomerRiskProfile;
 import com.riskplatform.common.entity.Anomaly;
 import com.riskplatform.common.entity.EventStoreEntry;
-import com.riskplatform.common.event.TransactionEvent;
+import com.riskplatform.common.event.TransactionValidatedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
