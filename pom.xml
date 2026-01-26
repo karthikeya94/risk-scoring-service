@@ -27,10 +27,16 @@
 		<testcontainers.version>1.20.4</testcontainers.version>
 	</properties>
 	<dependencies>
+		<!-- Common Models Library -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-data-mongodb</artifactId>
+			<groupId>com.riskplatform</groupId>
+			<artifactId>common-models</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
 		</dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
@@ -83,12 +89,6 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 		</dependency>
-
-        <dependency>
-            <groupId>com.riskplatform</groupId>
-            <artifactId>common-models</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
-        </dependency>
 	</dependencies>
 
 	<dependencyManagement>

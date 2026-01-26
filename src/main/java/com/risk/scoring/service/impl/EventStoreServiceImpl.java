@@ -5,7 +5,7 @@ import com.risk.scoring.model.*;
 import com.riskplatform.common.entity.EventStoreEntry;
 import com.riskplatform.common.entity.RiskAssessment;
 import com.riskplatform.common.entity.EventMetadata;
-import com.risk.scoring.repository.EventStoreRepository;
+
 import com.risk.scoring.service.EventStoreService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,11 +18,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.risk.scoring.client.EventStoreClient;
+import com.fasterxml.jackson.core.type.TypeReference;
+import org.springframework.data.domain.PageImpl;
+
 @Service
 public class EventStoreServiceImpl implements EventStoreService {
 
     @Autowired
-    private EventStoreRepository eventStoreRepository;
+    private EventStoreClient eventStoreClient;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -74,7 +78,7 @@ public class EventStoreServiceImpl implements EventStoreService {
 
         event.setTimestamp(assessment.getTimestamp());
 
-        return eventStoreRepository.save(event);
+        return eventStoreClient.save(event);
     }
 
     private long getNextVersion(String customerId) {
@@ -86,7 +90,7 @@ public class EventStoreServiceImpl implements EventStoreService {
 
     @Override
     public List<EventStoreEntry> getEventsByCustomerId(String customerId) {
-        return eventStoreRepository.findByAggregateIdAndAggregateTypeOrderByVersionAsc(
+        return eventStoreClient.findByAggregateIdAndAggregateTypeOrderByVersionAsc(
                 customerId, "CustomerRiskProfile");
     }
 
@@ -95,28 +99,32 @@ public class EventStoreServiceImpl implements EventStoreService {
             LocalDateTime startDate,
             LocalDateTime endDate,
             Pageable pageable) {
-        return eventStoreRepository.findByCustomerIdAndDateRange(customerId, startDate, endDate, pageable);
+        Map<String, Object> result = eventStoreClient.findByCustomerIdAndDateRange(customerId, startDate, endDate, pageable.getPageNumber(), pageable.getPageSize());
+        List<?> contentRaw = (List<?>) result.get("content");
+        List<EventStoreEntry> content = objectMapper.convertValue(contentRaw, new TypeReference<List<EventStoreEntry>>(){});
+        long total = ((Number) result.get("totalElements")).longValue();
+        return new PageImpl<>(content, pageable, total);
     }
 
     @Override
     public List<EventStoreEntry> getEventsByEventTypeAndDateRange(String eventType,
             LocalDateTime startDate,
             LocalDateTime endDate) {
-        return eventStoreRepository.findByEventTypeAndDateRange(eventType, startDate, endDate);
+        return eventStoreClient.findByEventTypeAndDateRange(eventType, startDate, endDate);
     }
 
     @Override
     public List<EventStoreEntry> getRecentEventsByCustomerId(String customerId, int limit) {
-        return eventStoreRepository.findRecentEventsByCustomerId(customerId, limit);
+        return eventStoreClient.findRecentEventsByCustomerId(customerId, limit);
     }
 
     @Override
     public EventStoreEntry saveEvent(EventStoreEntry event) {
-        return eventStoreRepository.save(event);
+        return eventStoreClient.save(event);
     }
 
     @Override
     public void bulkSaveEvents(List<EventStoreEntry> events) {
-        eventStoreRepository.bulkSaveEvents(events);
+        eventStoreClient.bulkSaveEvents(events);
     }
 }

@@ -15,6 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+import com.risk.scoring.client.CustomerRiskProfileClient;
+import com.risk.scoring.client.RiskRuleClient;
+import com.risk.scoring.client.AnomalyClient;
+
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -187,18 +191,20 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         return flags;
     }
 
-    @Autowired
-    private com.risk.scoring.repository.CustomerRiskProfileRepository customerRiskProfileRepository;
+
 
     @Autowired
-    private com.risk.scoring.repository.RiskRuleRepository riskRuleRepository;
+    private CustomerRiskProfileClient customerRiskProfileClient;
 
     @Autowired
-    private com.risk.scoring.repository.AnomalyRepository anomalyRepository;
+    private RiskRuleClient riskRuleClient;
+
+    @Autowired
+    private AnomalyClient anomalyClient;
 
     @Override
     public com.risk.scoring.model.dto.CustomerRiskProfileResponse getCustomerRiskProfile(String customerId) {
-        com.riskplatform.common.entity.CustomerRiskProfile profile = customerRiskProfileRepository
+        com.riskplatform.common.entity.CustomerRiskProfile profile = customerRiskProfileClient
                 .findByCustomerId(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer risk profile not found"));
 
@@ -225,7 +231,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
             com.risk.scoring.model.dto.RiskRuleRequest request) {
         com.riskplatform.common.entity.RiskRule rule = new com.riskplatform.common.entity.RiskRule();
         if (request.getRuleId() != null) {
-            rule = riskRuleRepository.findById(request.getRuleId())
+            rule = riskRuleClient.findById(request.getRuleId())
                     .orElse(new com.riskplatform.common.entity.RiskRule());
         }
 
@@ -239,7 +245,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
         rule.setEnabled(request.isEnabled());
         rule.setEffectiveDate(request.getEffectiveDate());
 
-        com.riskplatform.common.entity.RiskRule savedRule = riskRuleRepository.save(rule);
+        com.riskplatform.common.entity.RiskRule savedRule = riskRuleClient.save(rule);
 
         com.risk.scoring.model.dto.RiskRuleResponse response = new com.risk.scoring.model.dto.RiskRuleResponse();
         response.setRuleId(savedRule.getRuleId());
@@ -257,7 +263,7 @@ public class RiskScoringServiceImpl implements RiskScoringService {
             startTime = java.time.Instant.now().minus(24, java.time.temporal.ChronoUnit.HOURS);
         }
 
-        List<com.riskplatform.common.entity.Anomaly> anomalies = anomalyRepository.findByDetectedAtAfter(startTime);
+        List<com.riskplatform.common.entity.Anomaly> anomalies = anomalyClient.findByDetectedAtAfter(startTime);
 
         com.risk.scoring.model.dto.AnomaliesResponse response = new com.risk.scoring.model.dto.AnomaliesResponse();
         response.setAnomalies(anomalies);

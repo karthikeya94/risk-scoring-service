@@ -4,7 +4,7 @@ import com.riskplatform.common.entity.RiskRule;
 import com.riskplatform.common.enums.RuleType;
 import com.risk.scoring.model.dto.RiskRuleRequest;
 import com.risk.scoring.model.dto.RiskRuleResponse;
-import com.risk.scoring.repository.RiskRuleRepository;
+
 import com.risk.scoring.service.RiskRuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -14,25 +14,29 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import com.risk.scoring.client.RiskRuleClient;
+
+// ... other imports
+
 @Service
 public class RiskRuleServiceImpl implements RiskRuleService {
 
     @Autowired
-    private RiskRuleRepository riskRuleRepository;
+    private RiskRuleClient riskRuleClient;
 
     @Override
     public List<RiskRule> getActiveRules() {
-        return riskRuleRepository.findByEnabledIsTrue();
+        return riskRuleClient.findByEnabledIsTrue();
     }
 
     @Override
     public Optional<RiskRule> getRuleById(String ruleId) {
-        return riskRuleRepository.findById(ruleId);
+        return riskRuleClient.findById(ruleId);
     }
 
     @Override
     public Optional<RiskRule> getRuleByName(String ruleName) {
-        return riskRuleRepository.findByRuleName(ruleName);
+        return riskRuleClient.findByRuleName(ruleName);
     }
 
     @Override
@@ -48,7 +52,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
             rule.setCreatedAt(Instant.now());
         } else {
             // Update existing rule
-            Optional<RiskRule> existingRuleOpt = riskRuleRepository.findById(request.getRuleId());
+            Optional<RiskRule> existingRuleOpt = riskRuleClient.findById(request.getRuleId());
             if (existingRuleOpt.isEmpty()) {
                 throw new IllegalArgumentException("Rule not found with ID: " + request.getRuleId());
             }
@@ -73,7 +77,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         rule.setUpdatedAt(Instant.now());
 
         // Save rule
-        rule = riskRuleRepository.save(rule);
+        rule = riskRuleClient.save(rule);
 
         // Create response
         RiskRuleResponse response = new RiskRuleResponse();
@@ -88,9 +92,9 @@ public class RiskRuleServiceImpl implements RiskRuleService {
 
     @Override
     public boolean deleteRule(String ruleId) {
-        Optional<RiskRule> ruleOpt = riskRuleRepository.findById(ruleId);
+        Optional<RiskRule> ruleOpt = riskRuleClient.findById(ruleId);
         if (ruleOpt.isPresent()) {
-            riskRuleRepository.deleteById(ruleId);
+            riskRuleClient.deleteById(ruleId);
             return true;
         }
         return false;
@@ -98,7 +102,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
 
     @Override
     public RiskRuleResponse activateRule(String ruleId) {
-        Optional<RiskRule> ruleOpt = riskRuleRepository.findById(ruleId);
+        Optional<RiskRule> ruleOpt = riskRuleClient.findById(ruleId);
         if (ruleOpt.isEmpty()) {
             throw new IllegalArgumentException("Rule not found with ID: " + ruleId);
         }
@@ -108,7 +112,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         rule.setUpdatedAt(Instant.now());
         rule.setVersion(rule.getVersion() + 1);
 
-        rule = riskRuleRepository.save(rule);
+        rule = riskRuleClient.save(rule);
 
         RiskRuleResponse response = new RiskRuleResponse();
         response.setRuleId(rule.getRuleId());
@@ -121,7 +125,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
 
     @Override
     public RiskRuleResponse deactivateRule(String ruleId) {
-        Optional<RiskRule> ruleOpt = riskRuleRepository.findById(ruleId);
+        Optional<RiskRule> ruleOpt = riskRuleClient.findById(ruleId);
         if (ruleOpt.isEmpty()) {
             throw new IllegalArgumentException("Rule not found with ID: " + ruleId);
         }
@@ -131,7 +135,7 @@ public class RiskRuleServiceImpl implements RiskRuleService {
         rule.setUpdatedAt(Instant.now());
         rule.setVersion(rule.getVersion() + 1);
 
-        rule = riskRuleRepository.save(rule);
+        rule = riskRuleClient.save(rule);
 
         RiskRuleResponse response = new RiskRuleResponse();
         response.setRuleId(rule.getRuleId());

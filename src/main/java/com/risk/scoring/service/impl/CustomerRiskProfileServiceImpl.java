@@ -9,7 +9,7 @@ import com.riskplatform.common.entity.ScoreHistoryEntry;
 import com.riskplatform.common.entity.CustomerRiskProfile;
 import com.risk.scoring.model.dto.CustomerRiskProfileResponse;
 import com.risk.scoring.model.dto.CustomerProfileSummary;
-import com.risk.scoring.repository.CustomerRiskProfileRepository;
+
 import com.risk.scoring.service.CustomerRiskProfileService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -19,11 +19,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ArrayList;
 
+import com.risk.scoring.client.CustomerRiskProfileClient;
+
 @Service
 public class CustomerRiskProfileServiceImpl implements CustomerRiskProfileService {
 
     @Autowired
-    private CustomerRiskProfileRepository customerRiskProfileRepository;
+    private CustomerRiskProfileClient customerRiskProfileClient;
 
     // Debounce threshold - profile won't be updated if score difference is less
     // than this
@@ -35,17 +37,17 @@ public class CustomerRiskProfileServiceImpl implements CustomerRiskProfileServic
 
     @Override
     public Optional<CustomerRiskProfile> getCustomerRiskProfile(String customerId) {
-        return customerRiskProfileRepository.findByCustomerId(customerId);
+        return customerRiskProfileClient.findByCustomerId(customerId);
     }
 
     @Override
     public boolean updateCustomerRiskProfile(String customerId, CustomerRiskProfile updatedProfile) {
-        return customerRiskProfileRepository.updateWithDebounce(customerId, updatedProfile, DEBOUNCE_THRESHOLD);
+        return customerRiskProfileClient.updateWithDebounce(customerId, updatedProfile, DEBOUNCE_THRESHOLD);
     }
 
     @Override
     public CustomerRiskProfile saveCustomerRiskProfile(CustomerRiskProfile profile) {
-        return customerRiskProfileRepository.save(profile);
+        return customerRiskProfileClient.save(profile);
     }
 
     @Override
