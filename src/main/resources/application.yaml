@@ -1,10 +1,6 @@
 spring:
   application:
     name: risk-scoring-service
-  data:
-    mongodb:
-      uri: mongodb://localhost:27017/yourdatabase
-      database: sample_mflix
       
 management:
   endpoints:
